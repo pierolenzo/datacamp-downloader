@@ -8,7 +8,7 @@ import colorama
 
 from config import Config as con
 from helper import bcolors
-from utils import download_course, download_track, get_completed_tracks, get_completed_courses
+from utils import download_course, download_track, get_completed_tracks, get_completed_courses, get_all_courses, get_all_tracks
 
 
 def login_parser():
@@ -16,7 +16,7 @@ def login_parser():
     parser.add_argument("-t", "--token", required=True, type=str,
                         help="Specify your Datacamp authentication token.")
     parser.add_argument("-l", "--list", required=True, type=str,
-                        help="List completed (T) for tracks, (C) for courses")
+                        help="List completed (T) for tracks, (C) for courses, (TA) for all track, (CA) for all courses")
     parser.add_argument("-p", "--path", required=False, default=os.getcwd(), type=str,
                         help="Path to download the contents, default is the current directory")
     parser.add_argument("-v", "--video", action='store_true',
@@ -56,6 +56,10 @@ def main():
             handle_tracks(args)
         elif args.list == 'C':
             handle_courses(args)
+        elif args.list == 'TA':
+            handle_all_tracks(args)
+        elif args.list == 'CA':
+            handle_all_courses(args)
         else:
             sys.stdout.write(
                 f"{bcolors.FAIL} No valid list type provided! Only 'T' for tracks and 'C' for courses allowed! (args.list={args.list})  {bcolors.BKENDC}\n")
@@ -144,6 +148,65 @@ def print_tracks():
     for track in tracks:
         sys.stdout.write(
             f'{bcolors.BKBLUE} {track.id}. {track.name}  {bcolors.BKENDC}\n')
+
+
+def print_all_courses():
+    courses = get_all_courses()
+    if len(courses) == 0:
+        sys.stdout.write(
+            f'{bcolors.FAIL}No completed courses found!  {bcolors.BKENDC}\n')
+    for course in courses:
+        sys.stdout.write(
+            f'{bcolors.BKGREEN} {course.id}. {course.name}  {bcolors.BKENDC}\n')
+
+
+def print_all_tracks():
+    tracks = get_all_tracks()
+    if len(tracks) == 0:
+        sys.stdout.write(
+            f'{bcolors.FAIL}No completed tracks found!  {bcolors.BKENDC}\n')
+
+    for track in tracks:
+        sys.stdout.write(
+            f'{bcolors.BKBLUE} {track.id}. {track.name}  {bcolors.BKENDC}\n')
+
+
+def handle_all_courses(args):
+    thread = start_thread(print_all_courses)
+    if wait(thread):
+        if len(get_all_courses()) == 0:
+            exit()
+
+        required_courses = get_to_download()
+
+        for course_id in required_courses:
+            course = list(filter(lambda x: x.id == course_id,
+                                 get_all_courses()))[0]
+
+            if(args.all):
+                download_course(course.link, args.path,
+                                args.all, args.all, args.all)
+            else:
+                download_course(course.link, args.path,
+                                args.video, args.exercise, args.dataset)
+
+
+def handle_all_tracks(args):
+    thread = start_thread(print_all_tracks)
+    if wait(thread):
+        if len(get_all_tracks()) == 0:
+            exit()
+        required_tracks = get_to_download()
+
+        for track_id in required_tracks:
+            track = list(filter(lambda x: x.id == track_id,
+                                get_all_tracks()))[0]
+            if args.all:
+                download_track(track.link, args.path,
+                               args.all, args.all, args.all)
+            else:
+                download_track(track.link, args.path, args.video,
+                               args.exercise, args.dataset)
 
 
 colorama.init()
