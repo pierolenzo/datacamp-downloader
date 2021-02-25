@@ -240,7 +240,7 @@ def download_datasets(link, folder):
 
     dataset = soup.findAll('a', {
         'href': re.compile('^https'),
-        'class': re.compile('^link-borderless')
+        'class': re.compile('^dc-link ds-snowplow-link-course-dataset')
     })
     if len(dataset) == 0:
         sys.stdout.write(
@@ -259,3 +259,41 @@ def download_datasets(link, folder):
         dir = os.path.join(folder, 'Dataset', title) + \
             '.' + link.split('.')[-1]
         helper.download_file(con, link, dir)
+
+
+@helper.memoize
+def get_all_tracks():
+    profile = con.session.get(
+        'https://www.datacamp.com/tracks/career?embedded=true')  #+ con.data['slug'])
+    soup = BeautifulSoup(profile.text, 'html.parser')
+    # soup = soup.find('div', {'id': 'section-all'}).decompose()
+    # cont_rem = soup.find(id='section-all')
+    # _ = cont_rem.extract()
+    soup = soup.find(id='section-all')
+    tracks_name = soup.findAll('div', {'class': 'track-block__main'})
+    tracks_link = soup.findAll('a', {'href': re.compile('^/tracks'),
+                                     'class': 'shim'})
+    tracks = []
+    for i in range(len(tracks_link)):
+        link = 'https://www.datacamp.com' + tracks_link[i]['href']
+        tracks.append(
+            Template(i + 1, tracks_name[i].getText().replace('\n', ' '
+    ).strip(), link))
+    # completed_tracks = tracks
+    return tracks
+
+
+@helper.memoize
+def get_all_courses():
+    profile = con.session.get(
+        'https://www.datacamp.com/courses/tech:python?embedded=true')#+ con.data['slug'])
+    soup = BeautifulSoup(profile.text, 'html.parser')
+    courses_name = soup.findAll('h4', {'class': 'course-block__title'}
+    )
+    courses_link = soup.findAll('a', {'class': 'course-block__link ds-snowplow-link-course-block'})
+    courses = []
+    for i in range(len(courses_link)):
+        link = 'https://www.datacamp.com' + courses_link[i]['href']
+        courses.append(
+            Template(i + 1, courses_name[i].getText().strip(), link))
+    return courses
