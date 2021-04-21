@@ -8,7 +8,7 @@ with open("requirements.txt", "r", encoding="utf-8") as fh:
 
 setup(
     name="datacamp-downloader",
-    version="2.0",
+    version="2.1",
     author="Mohammad Al-Fetyani",
     author_email="m4bh@hotmail.com",
     description="Download your completed courses on Datacamp easily!",
@@ -27,7 +27,7 @@ setup(
     install_requires=required,
     setup_requires=["setuptools-git"],
     packages=find_packages(where="src"),
-    package_data={"datacamp_downloader": ["*", "*/*", "*/*/*"]},
+    include_package_data=True,
     python_requires=">=3.6",
     entry_points={"console_scripts": ["datacamp=datacamp_downloader.downloader:app"]},
 )
